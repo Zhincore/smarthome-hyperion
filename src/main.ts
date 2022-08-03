@@ -13,6 +13,8 @@ async function bootstrap() {
   await app.listen(config.port, config.host);
   Logger.log(`Listening on ${await app.getUrl()}`);
 
+  app.getHttpServer().on("close", () => bonjour.destroy());
+
   bonjour.publish({
     name: "Smart Home Hyperion",
     type: "smarthome-hyperion",

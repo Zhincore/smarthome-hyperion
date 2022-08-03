@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Redirect,
-  Get,
-  Header,
-  Post,
-  Query,
-  Body,
-  BadRequestException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Controller, Redirect, Get, Post, Query, Body, BadRequestException } from "@nestjs/common";
 import { config } from "$config";
 import { AuthService, GrantType } from "./auth.service";
 import { Auth } from "./auth.decorator";

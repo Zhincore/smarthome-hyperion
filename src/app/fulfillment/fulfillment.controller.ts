@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Body, Request } from "@nestjs/common";
 import Google from "actions-on-google";
 import { Request as ExpressRequest } from "express";
+import Color from "color";
 import { Auth } from "$app/auth/auth.decorator";
 import { FulfillmentService } from "./fulfillment.service";
-import Color from "color";
 
 @Controller("fulfillment")
 @Auth()
