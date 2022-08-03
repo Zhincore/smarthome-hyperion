@@ -8,8 +8,11 @@ async function bootstrap() {
   const bonjour = new Bonjour();
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
+
   await app.listen(config.port, config.host);
   Logger.log(`Listening on ${await app.getUrl()}`);
+
   bonjour.publish({
     name: "Smart Home Hyperion",
     type: "smarthome-hyperion",

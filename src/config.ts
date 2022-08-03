@@ -13,12 +13,13 @@ const device: SmartHomeV1SyncDevices = {
     "action.devices.traits.Brightness",
     "action.devices.traits.LightEffects",
   ],
-  name: { defaultNames: ["Hyperion", deviceId], name: "lights", nicknames: ["lights", "ambient"] },
+  name: { defaultNames: ["Hyperion", deviceId], name: "Leds", nicknames: [] },
   willReportState: false,
   attributes: {
     colorModel: "rgb",
     supportedEffects: ["colorLoop"],
   },
+  otherDeviceIds: [{ deviceId: "local-hyperion-id" }],
 };
 
 export const config = {

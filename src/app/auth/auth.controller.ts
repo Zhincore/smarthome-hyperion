@@ -2,6 +2,7 @@ import {
   Controller,
   Redirect,
   Get,
+  Header,
   Post,
   Query,
   Body,
@@ -16,17 +17,28 @@ import { Auth } from "./auth.decorator";
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
+  // @Get()
+  // @Header("content-type", "text/html")
+  // async auth(@Query() query: Record<string, string>) {
+  //   const url = new URL("/", "http://localhost");
+  //   for (const key in query) {
+  //     url.searchParams.append(key, query[key]);
+  //   }
+
+  //   return `<html><body><form method="POST" action="${url.search}"><input name="password" placeholder="password"><button>submit</button></from></body></html>`;
+  // }
+
   @Get()
   @Redirect()
-  async auth(
+  async authPost(
     @Query("client_id") clientId: string,
     @Query("redirect_uri") redirectUri: string,
     @Query("state") state: string,
-    @Query("password") password: string,
+    // @Body("password") password: string,
   ) {
+    // if (password !== config.oAuth.password) throw new UnauthorizedException("Invalid password");
     if (clientId !== config.oAuth.clientId) throw new BadRequestException("Unknown client_id");
-    if (redirectUri !== config.oAuth.redirectUri) throw new BadRequestException("Invalid redirect_uri");
-    if (password !== config.oAuth.password) throw new UnauthorizedException("Invalid password");
+    if (redirectUri !== config.oAuth.redirectUri) throw new BadRequestException("Invalid redirectUri");
 
     const url = new URL(redirectUri);
     url.searchParams.append("state", state);
@@ -62,7 +74,8 @@ export class AuthController {
         throw new BadRequestException(String(err), "invalid_grant");
       }
     }
-    return this.service.generateAccessToken(agentId);
+
+    return await this.service.generateAccessToken(agentId);
   }
 
   @Get("userinfo")

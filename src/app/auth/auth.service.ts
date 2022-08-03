@@ -80,7 +80,7 @@ export class AuthService {
         if (payload.clientId !== clientId) {
           return reject(new Error("Token issued for different client_id"));
         }
-        return payload;
+        resolve(payload as TokenTypes[TTokenType]);
       }),
     );
   }
@@ -94,7 +94,7 @@ export class AuthService {
   }
 
   async verifyAccessToken(token: string) {
-    return this.verifyToken(token, "refresh", config.oAuth.clientId);
+    return this.verifyToken(token, "access", config.oAuth.clientId);
   }
 
   async verifyRefreshToken(token: string, clientId: string) {

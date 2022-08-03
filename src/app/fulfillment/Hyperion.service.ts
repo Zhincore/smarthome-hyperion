@@ -32,6 +32,16 @@ export class HyperionService {
     return this.serverinfo.adjustment[0].brightness;
   }
 
+  get isOn() {
+    return (
+      this.isReady &&
+      this.components.ALL &&
+      this.components.LEDDEVICE &&
+      this.getCurrentSource()?.visible &&
+      this.brightness
+    );
+  }
+
   private createConnection(url: string) {
     this.ws = new WebSocket(url, {});
     this.ws.once("close", (code, reason) => {
@@ -45,9 +55,12 @@ export class HyperionService {
       const message: HMessage = JSON.parse(data.toString());
 
       // It's a response
-      if ("tan" in message) this.responses.emit(message.command + message.tan, message);
+      if ("tan" in message && message.command) this.responses.emit(message.command + ":" + message.tan, message);
       // It's an event
-      else if (message.command.endsWith("-update")) this.updateServerinfo(message);
+      else if (message.command.endsWith("-update")) {
+        this.updateServerinfo(message);
+        this.responses.emit(message.command, message.data);
+      }
       // It's unhandled
       else console.error("Unhandled message", message);
     });
@@ -96,11 +109,17 @@ export class HyperionService {
     }
   }
 
+  async awaitUpdate(type: string) {
+    return new Promise((resolve) => {
+      this.responses.once(type + "-update", resolve);
+    });
+  }
+
   async send<Response = void>(command: string, data: any = {}) {
     const tan = this.getTan();
     return new Promise<Response>((resolve, reject) => {
       this.ws.send(JSON.stringify({ ...data, command, tan }), (err) => err && reject(err));
-      this.responses.once(command + tan, (response: HMessage) => {
+      this.responses.once(command + ":" + tan, (response: HMessage) => {
         if (response.success) return resolve(response.info as Response);
         return reject(response.error);
       });
@@ -113,8 +132,25 @@ export class HyperionService {
    * @param duration Duration of color in ms. If you don't provide a duration, it's 0 -> indefinite
    * @param priority We recommend `50`, following the {@link https://docs.hyperion-project.org/en/api/guidelines#priority_guidelines Priority Guidelines}. Min `2` Max `99`
    */
-  async setColor(color: [number, number, number] | number[], duration?: number, priority = 50) {
+  async setColor(color: [number, number, number] | number[], duration?: number, priority = 1) {
     return this.send("color", { color, duration, priority, origin: this.origin });
+  }
+
+  async setEffect(name: string, effectArgs: Record<string, any> = {}, duration = 0, priority = 1) {
+    return this.send("effect", { effect: { name, ...effectArgs }, duration, priority, origin: this.origin });
+  }
+
+  async clear(priority = 1) {
+    return this.send("clear", { priority });
+  }
+
+  async setBrightness(brightness: number) {
+    return this.send("adjustment", { adjustment: { brightness } });
+  }
+
+  async setComponentState(component: ComponentId, state?: boolean) {
+    if (state === undefined) state = !this.components[component];
+    return this.send("componentstate", { componentstate: { component, state } });
   }
 
   /** Helper function to get the current selected source */
