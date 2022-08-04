@@ -8,11 +8,11 @@
   "main": "dist/main",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "node build",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "nest start --watch --preserveWatchOutput",
     "debug": "nest start --debug --watch",
-    "start": "TS_NODE_BASEURL=dist node --enable-source-maps -r tsconfig-paths/register dist/main",
+    "start": "node --enable-source-maps .",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -40,8 +40,6 @@
   "devDependencies": {
     "@nestjs/cli": "^8.2.8",
     "@nestjs/schematics": "^8.0.11",
-    "@swc/cli": "^0.1.57",
-    "@swc/core": "^1.2.223",
     "@types/color": "^3.0.3",
     "@types/express": "^4.17.13",
     "@types/jsonwebtoken": "^8.5.8",
