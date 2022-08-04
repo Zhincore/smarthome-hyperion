@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/swcrc",
+  "jsc": {
+    "paths": {
+      "$config": ["./config"],
+      "$app/*": ["./app/*"]
+    },
+    "baseUrl": "./src",
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true
+    },
+    "target": "es2022",
+    "transform": {
+      "decoratorMetadata": true
+    }
+  },
+  "module": {
+    "type": "commonjs",
+    "strict": true
+  },
+  "sourceMaps": true
+}

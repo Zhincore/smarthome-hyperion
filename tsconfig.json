@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "paths": {
-      "$config": ["./src/config"],
-      "$app/*": ["./src/app/*"]
+      "$config": ["./config"],
+      "$app/*": ["./app/*"]
     },
+    "baseUrl": "./src",
     "module": "NodeNext",
     "declaration": true,
     "removeComments": true,
@@ -13,7 +14,6 @@
     "target": "esnext",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
