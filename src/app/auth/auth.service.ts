@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { Injectable } from "@nestjs/common";
+import fs from "node:fs/promises";
+import { Injectable, OnModuleInit } from "@nestjs/common";
 import * as jwt from "jsonwebtoken";
 import ms from "ms";
 import { config } from "$config";
@@ -26,12 +27,42 @@ interface AcesssToken extends Token {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private static readonly expiresMap: { [T in TokenType]: string } = {
     authorization: config.oAuth.authGrantExpires,
     access: config.oAuth.accessExpires,
     refresh: config.oAuth.refreshExpires,
   };
+
+  private readonly agentIds = new Set<string>();
+
+  getAgentsIds() {
+    return this.agentIds.values();
+  }
+
+  removeAgentId(id: string) {
+    return this.agentIds.delete(id);
+  }
+
+  async onModuleInit() {
+    await this.loadAgentIds();
+  }
+
+  private async loadAgentIds() {
+    try {
+      const file = await fs.readFile(config.agentIdsPath, "utf-8");
+      for (const id of JSON.parse(file)) {
+        this.agentIds.add(id);
+      }
+    } catch (err) {
+      if ("code" in err && err.code === "ENOENT") return;
+      throw err;
+    }
+  }
+
+  private async saveAgentIds() {
+    await fs.writeFile(config.agentIdsPath, JSON.stringify(Array.from(this.agentIds)));
+  }
 
   private async generateToken<TTokenType extends TokenType>(
     type: TTokenType,
@@ -57,8 +88,15 @@ export class AuthService {
     return this.generateToken("authorization", { redirectUri });
   }
 
+  private async createNewAgentId() {
+    const id = randomUUID();
+    this.agentIds.add(id);
+    await this.saveAgentIds();
+    return id;
+  }
+
   async generateAccessToken(agentId?: string) {
-    if (!agentId) agentId = await randomUUID();
+    if (!agentId) agentId = await this.createNewAgentId();
     const access_token = await this.generateToken("access", { agentId });
     const refresh_token = await this.generateToken("refresh", { agentId });
 

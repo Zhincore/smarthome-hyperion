@@ -1,17 +1,38 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleInit } from "@nestjs/common";
 import Color from "color";
 import { config } from "$config";
+import { AuthService } from "$app/auth/auth.service";
 import { HyperionService } from "./Hyperion.service";
+import { ReportstateService } from "./reportstate.service";
 
 @Injectable()
-export class FulfillmentService {
+export class FulfillmentService implements OnModuleInit {
+  private readonly reportstate = new ReportstateService();
   readonly hyperion = new HyperionService(config.hyperionUrl, config.hyperionOrigin);
 
-  constructor() {
-    this.hyperion
-      .waitUntilReady()
-      .then(() => this.getStates())
-      .then(console.log);
+  constructor(private readonly auth: AuthService) {
+    this.hyperion.on("update", async (part) => {
+      if (!["components", "priorities", "adjustment"].includes(part)) return;
+      await this.reportStates();
+    });
+  }
+
+  async onModuleInit() {
+    this.hyperion.connect();
+  }
+
+  private async reportStates() {
+    if (!this.hyperion.isReady) return;
+
+    const devices = {
+      states: {
+        [config.device.id]: this.getStates(),
+      },
+    };
+
+    for (const agentId of this.auth.getAgentsIds()) {
+      this.reportstate.reportState(agentId, devices);
+    }
   }
 
   async getDevices() {

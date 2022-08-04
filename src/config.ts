@@ -32,6 +32,8 @@ export const config = {
     accessExpires: env("ACCESS_EXPIRES", "1h"),
     refreshExpires: env("REFRESH_EXPIRES", "1y"),
   },
+  googleAppCreds: env("GOOGLE_APPLICATION_CREDENTIALS", "data/undefined.json"),
+  agentIdsPath: "data/agentIds.json",
   host: env("HOST", "localhost"),
   port: parseInt(env("PORT", "3000")),
   hyperionUrl: env("HYPERION_WS_URL"),

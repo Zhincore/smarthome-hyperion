@@ -5,27 +5,19 @@ import { WebSocket } from "ws";
 const logger = new Logger("HyperionService");
 
 @Injectable()
-export class HyperionService {
-  private responses = new EventEmitter();
+export class HyperionService extends EventEmitter {
+  private readonly responses = new EventEmitter();
   private ws: WebSocket;
   private tan = 0;
   serverinfo: Readonly<HyperionServerInfo>;
   components: ComponentsMap;
 
-  constructor(url: string, public origin = "Hyperion.ts") {
-    this.createConnection(url);
+  constructor(public url: string, public origin = "Hyperion.ts") {
+    super();
   }
 
   get isReady() {
     return this.ws.readyState === WebSocket.OPEN;
-  }
-
-  private getTan() {
-    return (this.tan = (this.tan + 1) % Number.MAX_SAFE_INTEGER);
-  }
-
-  async waitUntilReady() {
-    return new Promise<HyperionService>((resolve) => this.responses.once("_ready", () => resolve(this)));
   }
 
   get brightness() {
@@ -38,13 +30,15 @@ export class HyperionService {
     );
   }
 
-  private createConnection(url: string) {
-    this.ws = new WebSocket(url, {});
+  async connect() {
+    if (this.ws && this.ws.readyState !== WebSocket.CLOSED) throw new Error("Refusing to replace existing connection");
+
+    this.ws = new WebSocket(this.url, {});
     this.ws.once("close", (code, reason) => {
       logger.warn("Lost connection with Hyperion:", reason.toString());
 
       // Reconnect
-      if (code !== 1000) setTimeout(() => this.createConnection(this.ws.url), 5000);
+      if (code !== 1000) setTimeout(() => this.connect(), 5000);
     });
     this.ws.on("error", console.error);
     this.ws.on("message", (data) => {
@@ -55,10 +49,11 @@ export class HyperionService {
       // It's an event
       else if (message.command.endsWith("-update")) {
         this.updateServerinfo(message);
-        this.responses.emit(message.command, message.data);
       }
       // It's unhandled
       else console.error("Unhandled message", message);
+
+      this.emit(message.command, message);
     });
 
     // Init
@@ -69,7 +64,15 @@ export class HyperionService {
       this.responses.emit("_ready");
     });
 
-    return this.ws;
+    return this.waitUntilReady();
+  }
+
+  private getTan() {
+    return (this.tan = (this.tan + 1) % Number.MAX_SAFE_INTEGER);
+  }
+
+  async waitUntilReady() {
+    return new Promise<HyperionService>((resolve) => this.responses.once("_ready", () => resolve(this)));
   }
 
   private updateComponents(...components: Component[]) {
@@ -103,11 +106,13 @@ export class HyperionService {
         this.updateComponents(message.data);
         break;
     }
+
+    this.emit("update", part, message.data);
   }
 
   async awaitUpdate(type: string) {
     return new Promise((resolve) => {
-      this.responses.once(type + "-update", resolve);
+      this.once(type + "-update", resolve);
     });
   }
 
