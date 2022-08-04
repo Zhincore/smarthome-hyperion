@@ -7,6 +7,13 @@ import { HyperionService } from "./Hyperion.service";
 export class FulfillmentService {
   readonly hyperion = new HyperionService(config.hyperionUrl, config.hyperionOrigin);
 
+  constructor() {
+    this.hyperion
+      .waitUntilReady()
+      .then(() => this.getStates())
+      .then(console.log);
+  }
+
   async getDevices() {
     return [config.device];
   }

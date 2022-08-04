@@ -33,12 +33,8 @@ export class HyperionService {
   }
 
   get isOn() {
-    return (
-      this.isReady &&
-      this.components.ALL &&
-      this.components.LEDDEVICE &&
-      this.getCurrentSource()?.visible &&
-      this.brightness
+    return Boolean(
+      this.isReady && this.components.ALL && this.components.LEDDEVICE && this.getCurrentSource() && this.brightness,
     );
   }
 
